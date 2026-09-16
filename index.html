@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公司抽奖转盘</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 680px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { color: #333; margin-bottom: 25px; font-size: 30px; }
+        .wheel-container {
+            position: relative;
+            width: 520px;
+            height: 520px;
+            margin: 0 auto 25px;
+            max-width: 90vw;
+            max-height: 90vw;
+        }
+        #wheel {
+            width: 100%;
+            height: 100%;
+            transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+            border-radius: 50%;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.25));
+        }
+        .pointer {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 24px solid transparent;
+            border-right: 24px solid transparent;
+            border-top: 48px solid #ff4757;
+            z-index: 10;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+        }
+        .center-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 115px;
+            height: 115px;
+            border-radius: 50%;
+            background: #ff4757;
+            color: #fff;
+            border: 6px solid #fff;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 5;
+            box-shadow: 0 6px 20px rgba(255,71,87,0.5);
+            transition: all 0.3s;
+        }
+        .center-btn:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.08); }
+        .center-btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+        .input-group { margin: 25px 0; }
+        .input-group input {
+            width: 100%;
+            padding: 16px 22px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 18px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus { border-color: #667eea; }
+        .result {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .result.win { background: #d4edda; color: #155724; }
+        .result.lose { background: #f8d7da; color: #721c24; }
+        .result.error { background: #fff3cd; color: #856404; }
+        .stats { margin-top: 15px; font-size: 15px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 公司抽奖转盘 🎉</h1>
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <canvas id="wheel" width="900" height="900"></canvas>
+            <button class="center-btn" id="drawBtn" onclick="startDraw()">抽奖</button>
+        </div>
+        <div class="input-group">
+            <input type="text" id="nameInput" placeholder="请输入您的姓名" autocomplete="off">
+        </div>
+        <div class="result" id="result"></div>
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <script>
+        let prizes = [];
+        let isSpinning = false;
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FFB347', '#87CEEB'];
+
+        async function loadPrizes() {
+            const res = await fetch('/api/prizes');
+            prizes = await res.json();
+            drawWheel();
+        }
+
+        async function loadStats() {
+            const res = await fetch('/api/stats');
+            const s = await res.json();
+            document.getElementById('stats').textContent =
+                `已参与：${s.drawn_people}/${s.total_people} 人 | 剩余奖品：${s.remaining_prizes}/${s.total_prizes} 个`;
+        }
+
+    function drawWheel() {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    // 7个奖品 + 1个"谢谢参与" = 8个扇区
+    const sectors = prizes.map(p => p.name);
+    sectors.push('谢谢参与');
+
+    const numSectors = sectors.length;
+    const anglePerSector = (2 * Math.PI) / numSectors;
+
+    // 基础字号：根据扇区外沿弧长动态计算
+    const arcLength = (2 * Math.PI * radius) / numSectors;
+    let baseFontSize = Math.floor(arcLength * 0.22);
+    baseFontSize = Math.max(22, Math.min(52, baseFontSize));
+
+    // 文字可用的径向长度 = 从内圈到外圈的距离（留出内圈和边距）
+    const innerCircleRadius = 90;   // 中心白色圆的半径
+    const outerPadding = 30;        // 文字离外沿的距离
+    const availableLength = radius - innerCircleRadius - outerPadding;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < numSectors; i++) {
+        const startAngle = i * anglePerSector - Math.PI / 2;
+        const endAngle = (i + 1) * anglePerSector - Math.PI / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // ---- 按文字长度自适应字号 ----
+        const text = sectors[i];
+        let fontSize = baseFontSize;
+
+        // 实测文字宽度，如果超过可用径向长度，就等比缩小
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        let textWidth = ctx.measureText(text).width;
+        if (textWidth > availableLength) {
+            fontSize = Math.floor(fontSize * (availableLength / textWidth));
+            // 设一个下限，太小了就截断处理
+            fontSize = Math.max(fontSize, 12);
+        }
+
+        // 如果缩到 12px 还是放不下，就截断加省略号
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        textWidth = ctx.measureText(text).width;
+        let displayText = text;
+        if (textWidth > availableLength) {
+            // 逐字删减直到放得下
+            while (displayText.length > 1 && ctx.measureText(displayText + '…').width > availableLength) {
+                displayText = displayText.slice(0, -1);
+            }
+            displayText = displayText + '…';
+        }
+
+        // 绘制文字
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + anglePerSector / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.shadowColor = 'rgba(0,0,0,0.25)';
+        ctx.shadowBlur = 6;
+        ctx.fillText(displayText, radius - outerPadding, 0);
+        ctx.restore();
+    }
+
+    // 中心装饰圆
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 80, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    }
+
+        async function startDraw() {
+            if (isSpinning) return;
+
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) {
+                showResult('请输入您的姓名', 'error');
+                return;
+            }
+
+            isSpinning = true;
+            document.getElementById('drawBtn').disabled = true;
+            document.getElementById('result').className = 'result';
+            document.getElementById('result').textContent = '';
+
+            try {
+                const res = await fetch('/api/draw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showResult(data.error, 'error');
+                    isSpinning = false;
+                    document.getElementById('drawBtn').disabled = false;
+                    return;
+                }
+
+                let targetIndex;
+                if (data.prize) {
+                    targetIndex = prizes.findIndex(p => p.name === data.prize.name);
+                } else {
+                    targetIndex = prizes.length; // 谢谢参与
+                }
+
+                spinTo(targetIndex, () => {
+                    if (data.prize) {
+                        showResult(`🎉 恭喜你抽中【${data.prize.name}】！`, 'win');
+                    } else {
+                        showResult('😊 谢谢参与，下次好运！', 'lose');
+                    }
+                    isSpinning = false;
+                    document.getElementById('drawBtn').disabled = false;
+                    loadPrizes();
+                    loadStats();
+                });
+
+            } catch (e) {
+                showResult('网络错误，请稍后重试', 'error');
+                isSpinning = false;
+                document.getElementById('drawBtn').disabled = false;
+            }
+        }
+
+        function spinTo(targetIndex, callback) {
+            const numSectors = prizes.length + 1;
+            const anglePerSector = 360 / numSectors;
+
+            const targetCenter = targetIndex * anglePerSector + anglePerSector / 2;
+            const targetAngle = 360 * 5 + (360 - targetCenter);
+
+            const currentTransform = canvas.style.transform;
+            let currentAngle = 0;
+            if (currentTransform) {
+                const match = currentTransform.match(/rotate\(([\d.-]+)deg\)/);
+                if (match) currentAngle = parseFloat(match[1]);
+            }
+
+            const totalAngle = currentAngle + targetAngle - (currentAngle % 360);
+            canvas.style.transform = `rotate(${totalAngle}deg)`;
+
+            setTimeout(callback, 4200);
+        }
+
+        function showResult(text, type) {
+            const el = document.getElementById('result');
+            el.textContent = text;
+            el.className = 'result ' + type;
+        }
+
+        loadPrizes();
+        loadStats();
+        setInterval(loadStats, 10000);
+    </script>
+</body>
+</html>
