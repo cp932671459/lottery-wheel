@@ -2,103 +2,185 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>公司抽奖转盘</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 16px;
         }
+
         .container {
             background: #fff;
             border-radius: 20px;
-            padding: 40px;
+            padding: clamp(20px, 5vw, 40px);
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 680px;
             width: 100%;
+            max-width: 680px;
             text-align: center;
         }
-        h1 { color: #333; margin-bottom: 25px; font-size: 30px; }
+
+        h1 {
+            color: #333;
+            margin-bottom: clamp(16px, 3vw, 25px);
+            font-size: clamp(20px, 5vw, 30px);
+        }
+
         .wheel-container {
             position: relative;
-            width: 520px;
-            height: 520px;
-            margin: 0 auto 25px;
-            max-width: 90vw;
-            max-height: 90vw;
+            width: min(520px, 85vw);
+            aspect-ratio: 1 / 1;
+            margin: 0 auto clamp(16px, 3vw, 25px);
         }
+
         #wheel {
             width: 100%;
             height: 100%;
+            display: block;
             transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
             border-radius: 50%;
             filter: drop-shadow(0 10px 30px rgba(0,0,0,0.25));
         }
+
         .pointer {
             position: absolute;
-            top: -24px;
+            top: -4.5%;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 24px solid transparent;
-            border-right: 24px solid transparent;
-            border-top: 48px solid #ff4757;
+            border-left: 4.5% solid transparent;
+            border-right: 4.5% solid transparent;
+            border-top: 9% solid #ff4757;
             z-index: 10;
             filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35));
         }
+
         .center-btn {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 115px;
-            height: 115px;
+            width: 22%;
+            height: 22%;
             border-radius: 50%;
             background: #ff4757;
             color: #fff;
-            border: 6px solid #fff;
-            font-size: 24px;
+            border: clamp(3px, 0.9vw, 6px) solid #fff;
+            font-size: clamp(14px, 4vw, 24px);
             font-weight: bold;
             cursor: pointer;
             z-index: 5;
             box-shadow: 0 6px 20px rgba(255,71,87,0.5);
             transition: all 0.3s;
+            padding: 0;
         }
-        .center-btn:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.08); }
-        .center-btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
-        .input-group { margin: 25px 0; }
-        .input-group input {
-            width: 100%;
-            padding: 16px 22px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 18px;
-            outline: none;
-            transition: border-color 0.3s;
+
+            .center-btn:hover:not(:disabled) {
+                transform: translate(-50%, -50%) scale(1.08);
+            }
+
+            .center-btn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
+
+        .input-group {
+            margin: clamp(16px, 3vw, 25px) 0;
         }
-        .input-group input:focus { border-color: #667eea; }
+
+            .input-group input {
+                width: 100%;
+                padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 22px);
+                border: 2px solid #ddd;
+                border-radius: 10px;
+                font-size: clamp(15px, 4vw, 18px);
+                outline: none;
+                transition: border-color 0.3s;
+                -webkit-appearance: none;
+            }
+
+                .input-group input:focus {
+                    border-color: #667eea;
+                }
+
         .result {
-            margin-top: 18px;
-            padding: 18px;
+            margin-top: clamp(12px, 3vw, 18px);
+            padding: clamp(12px, 3vw, 18px);
             border-radius: 10px;
-            font-size: 22px;
+            font-size: clamp(15px, 4.5vw, 22px);
             font-weight: bold;
-            min-height: 64px;
+            min-height: 54px;
             display: flex;
             align-items: center;
             justify-content: center;
+            word-break: break-all;
         }
-        .result.win { background: #d4edda; color: #155724; }
-        .result.lose { background: #f8d7da; color: #721c24; }
-        .result.error { background: #fff3cd; color: #856404; }
-        .stats { margin-top: 15px; font-size: 15px; color: #999; }
+
+            .result.win {
+                background: #d4edda;
+                color: #155724;
+            }
+
+            .result.lose {
+                background: #f8d7da;
+                color: #721c24;
+            }
+
+            .result.error {
+                background: #fff3cd;
+                color: #856404;
+            }
+
+        .stats {
+            margin-top: clamp(10px, 2vw, 15px);
+            font-size: clamp(12px, 3vw, 15px);
+            color: #999;
+        }
+
+        /* 针对窄屏手机进一步优化 */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                border-radius: 16px;
+            }
+
+            .wheel-container {
+                width: min(420px, 92vw);
+            }
+        }
+
+        /* 针对横屏手机，避免转盘过高 */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .wheel-container {
+                width: min(360px, 55vh);
+            }
+
+            h1 {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -136,89 +218,79 @@
                 `已参与：${s.drawn_people}/${s.total_people} 人 | 剩余奖品：${s.remaining_prizes}/${s.total_prizes} 个`;
         }
 
-    function drawWheel() {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 20;
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 20;
 
-    // 7个奖品 + 1个"谢谢参与" = 8个扇区
-    const sectors = prizes.map(p => p.name);
-    sectors.push('谢谢参与');
+            const sectors = prizes.map(p => p.name);
+            sectors.push('谢谢参与');
 
-    const numSectors = sectors.length;
-    const anglePerSector = (2 * Math.PI) / numSectors;
+            const numSectors = sectors.length;
+            const anglePerSector = (2 * Math.PI) / numSectors;
 
-    // 基础字号：根据扇区外沿弧长动态计算
-    const arcLength = (2 * Math.PI * radius) / numSectors;
-    let baseFontSize = Math.floor(arcLength * 0.22);
-    baseFontSize = Math.max(22, Math.min(52, baseFontSize));
+            const arcLength = (2 * Math.PI * radius) / numSectors;
+            let baseFontSize = Math.floor(arcLength * 0.22);
+            baseFontSize = Math.max(22, Math.min(52, baseFontSize));
 
-    // 文字可用的径向长度 = 从内圈到外圈的距离（留出内圈和边距）
-    const innerCircleRadius = 90;   // 中心白色圆的半径
-    const outerPadding = 30;        // 文字离外沿的距离
-    const availableLength = radius - innerCircleRadius - outerPadding;
+            const innerCircleRadius = 90;
+            const outerPadding = 30;
+            const availableLength = radius - innerCircleRadius - outerPadding;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (let i = 0; i < numSectors; i++) {
-        const startAngle = i * anglePerSector - Math.PI / 2;
-        const endAngle = (i + 1) * anglePerSector - Math.PI / 2;
+            for (let i = 0; i < numSectors; i++) {
+                const startAngle = i * anglePerSector - Math.PI / 2;
+                const endAngle = (i + 1) * anglePerSector - Math.PI / 2;
 
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-        ctx.closePath();
-        ctx.fillStyle = colors[i % colors.length];
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 4;
-        ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 4;
+                ctx.stroke();
 
-        // ---- 按文字长度自适应字号 ----
-        const text = sectors[i];
-        let fontSize = baseFontSize;
+                const text = sectors[i];
+                let fontSize = baseFontSize;
 
-        // 实测文字宽度，如果超过可用径向长度，就等比缩小
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        let textWidth = ctx.measureText(text).width;
-        if (textWidth > availableLength) {
-            fontSize = Math.floor(fontSize * (availableLength / textWidth));
-            // 设一个下限，太小了就截断处理
-            fontSize = Math.max(fontSize, 12);
-        }
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                let textWidth = ctx.measureText(text).width;
+                if (textWidth > availableLength) {
+                    fontSize = Math.floor(fontSize * (availableLength / textWidth));
+                    fontSize = Math.max(fontSize, 12);
+                }
 
-        // 如果缩到 12px 还是放不下，就截断加省略号
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        textWidth = ctx.measureText(text).width;
-        let displayText = text;
-        if (textWidth > availableLength) {
-            // 逐字删减直到放得下
-            while (displayText.length > 1 && ctx.measureText(displayText + '…').width > availableLength) {
-                displayText = displayText.slice(0, -1);
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                textWidth = ctx.measureText(text).width;
+                let displayText = text;
+                if (textWidth > availableLength) {
+                    while (displayText.length > 1 && ctx.measureText(displayText + '…').width > availableLength) {
+                        displayText = displayText.slice(0, -1);
+                    }
+                    displayText = displayText + '…';
+                }
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + anglePerSector / 2);
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                ctx.shadowBlur = 6;
+                ctx.fillText(displayText, radius - outerPadding, 0);
+                ctx.restore();
             }
-            displayText = displayText + '…';
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 80, 0, 2 * Math.PI);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
         }
-
-        // 绘制文字
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(startAngle + anglePerSector / 2);
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fff';
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        ctx.shadowColor = 'rgba(0,0,0,0.25)';
-        ctx.shadowBlur = 6;
-        ctx.fillText(displayText, radius - outerPadding, 0);
-        ctx.restore();
-    }
-
-    // 中心装饰圆
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 80, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-    }
 
         async function startDraw() {
             if (isSpinning) return;
@@ -253,7 +325,7 @@
                 if (data.prize) {
                     targetIndex = prizes.findIndex(p => p.name === data.prize.name);
                 } else {
-                    targetIndex = prizes.length; // 谢谢参与
+                    targetIndex = prizes.length;
                 }
 
                 spinTo(targetIndex, () => {
