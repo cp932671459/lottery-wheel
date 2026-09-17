@@ -21,6 +21,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 16px;
@@ -44,7 +45,9 @@
 
         .wheel-container {
             position: relative;
-            width: min(520px, 85vw);
+            /* 关键修复：改为 100% 宽度，最大 520px，确保不溢出卡片 */
+            width: 100%;
+            max-width: 520px;
             aspect-ratio: 1 / 1;
             margin: 0 auto clamp(16px, 3vw, 25px);
         }
@@ -57,19 +60,28 @@
             border-radius: 50%;
             filter: drop-shadow(0 10px 30px rgba(0,0,0,0.25));
         }
-
+        /* 修复指针：手机上用 vw 单位自适应，电脑上回退到像素值 */
         .pointer {
             position: absolute;
-            top: -4.5%;
+            top: -2.5vw;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 4.5% solid transparent;
-            border-right: 4.5% solid transparent;
-            border-top: 9% solid #ff4757;
+            border-left: 2.5vw solid transparent;
+            border-right: 2.5vw solid transparent;
+            border-top: 5vw solid #ff4757;
             z-index: 10;
             filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+        }
+
+        @media (min-width: 520px) {
+            .pointer {
+                top: -22px;
+                border-left: 14px solid transparent;
+                border-right: 14px solid transparent;
+                border-top: 28px solid #ff4757;
+            }
         }
 
         .center-btn {
@@ -164,16 +176,12 @@
             .container {
                 border-radius: 16px;
             }
-
-            .wheel-container {
-                width: min(420px, 92vw);
-            }
         }
 
         /* 针对横屏手机，避免转盘过高 */
         @media (max-height: 600px) and (orientation: landscape) {
             .wheel-container {
-                width: min(360px, 55vh);
+                max-width: 55vh;
             }
 
             h1 {
@@ -230,11 +238,11 @@
             const anglePerSector = (2 * Math.PI) / numSectors;
 
             const arcLength = (2 * Math.PI * radius) / numSectors;
-            let baseFontSize = Math.floor(arcLength * 0.22);
-            baseFontSize = Math.max(22, Math.min(52, baseFontSize));
+            let baseFontSize = Math.floor(arcLength * 0.18);
+            baseFontSize = Math.max(20, Math.min(36, baseFontSize));
 
-            const innerCircleRadius = 90;
-            const outerPadding = 30;
+            const innerCircleRadius = 115;
+            const outerPadding = 25;
             const availableLength = radius - innerCircleRadius - outerPadding;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -255,22 +263,24 @@
 
                 const text = sectors[i];
                 let fontSize = baseFontSize;
+                let displayText = text;
 
                 ctx.font = `bold ${fontSize}px sans-serif`;
-                let textWidth = ctx.measureText(text).width;
+                let textWidth = ctx.measureText(displayText).width;
+
                 if (textWidth > availableLength) {
                     fontSize = Math.floor(fontSize * (availableLength / textWidth));
-                    fontSize = Math.max(fontSize, 12);
-                }
+                    fontSize = Math.max(fontSize, 16);
 
-                ctx.font = `bold ${fontSize}px sans-serif`;
-                textWidth = ctx.measureText(text).width;
-                let displayText = text;
-                if (textWidth > availableLength) {
-                    while (displayText.length > 1 && ctx.measureText(displayText + '…').width > availableLength) {
-                        displayText = displayText.slice(0, -1);
+                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    textWidth = ctx.measureText(displayText).width;
+
+                    if (textWidth > availableLength) {
+                        while (displayText.length > 1 && ctx.measureText(displayText + '…').width > availableLength) {
+                            displayText = displayText.slice(0, -1);
+                        }
+                        displayText = displayText + '…';
                     }
-                    displayText = displayText + '…';
                 }
 
                 ctx.save();
@@ -287,7 +297,7 @@
             }
 
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 80, 0, 2 * Math.PI);
+            ctx.arc(centerX, centerY, 90, 0, 2 * Math.PI);
             ctx.fillStyle = '#fff';
             ctx.fill();
         }
