@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>公司抽奖转盘</title>
+    <title>盛东来中秋・好运暴击时刻！</title>
     <style>
         * {
             margin: 0;
@@ -193,7 +193,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎉 公司抽奖转盘 🎉</h1>
+        <h1>🎉 盛东来中秋・好运暴击时刻！ 🎉</h1>
         <div class="wheel-container">
             <div class="pointer"></div>
             <canvas id="wheel" width="900" height="900"></canvas>
@@ -232,7 +232,7 @@
             const radius = Math.min(centerX, centerY) - 20;
 
             const sectors = prizes.map(p => p.name);
-            sectors.push('谢谢参与');
+            sectors.push('中秋甜蜜糖水');
 
             const numSectors = sectors.length;
             const anglePerSector = (2 * Math.PI) / numSectors;
@@ -342,7 +342,7 @@
                     if (data.prize) {
                         showResult(`🎉 恭喜你抽中【${data.prize.name}】！`, 'win');
                     } else {
-                        showResult('😊 谢谢参与，下次好运！', 'lose');
+                        showResult('🥣 恭喜你获得中秋甜蜜糖水，中秋快乐！', 'win');
                     }
                     isSpinning = false;
                     document.getElementById('drawBtn').disabled = false;
