@@ -5,14 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>抽奖管理后台</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f7fa;
             padding: 20px;
         }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { color: #333; margin-bottom: 20px; }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
         .card {
             background: #fff;
             border-radius: 12px;
@@ -20,7 +34,13 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
-        .card h2 { font-size: 18px; margin-bottom: 15px; color: #555; }
+
+            .card h2 {
+                font-size: 18px;
+                margin-bottom: 15px;
+                color: #555;
+            }
+
         textarea {
             width: 100%;
             min-height: 150px;
@@ -31,7 +51,12 @@
             font-size: 14px;
             resize: vertical;
         }
-        textarea:focus { border-color: #667eea; outline: none; }
+
+            textarea:focus {
+                border-color: #667eea;
+                outline: none;
+            }
+
         button {
             background: #667eea;
             color: #fff;
@@ -43,24 +68,59 @@
             margin-top: 10px;
             transition: background 0.3s;
         }
-        button:hover { background: #5568d3; }
-        .hint { font-size: 13px; color: #999; margin-top: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; font-weight: 600; color: #555; }
+
+            button:hover {
+                background: #5568d3;
+            }
+
+        .hint {
+            font-size: 13px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
         }
+
         .stat-item {
             background: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
             text-align: center;
         }
-        .stat-item .num { font-size: 28px; font-weight: bold; color: #667eea; }
-        .stat-item .label { font-size: 13px; color: #999; margin-top: 5px; }
+
+            .stat-item .num {
+                font-size: 28px;
+                font-weight: bold;
+                color: #667eea;
+            }
+
+            .stat-item .label {
+                font-size: 13px;
+                color: #999;
+                margin-top: 5px;
+            }
     </style>
 </head>
 <body>
@@ -86,6 +146,10 @@
             <p style="margin:15px 0 10px;color:#666;">参与者名单（每行一个姓名）</p>
             <textarea id="participantsInput" placeholder="张三&#10;李四&#10;王五&#10;..."></textarea>
 
+            <p style="margin:15px 0 10px;color:#666;">管理密码（导入数据时需要）</p>
+            <input type="password" id="adminPassword" placeholder="请输入管理密码"
+                   style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:10px;">
+
             <button onclick="initData()">导入数据</button>
             <p class="hint">注意：导入会清空之前的所有数据，请谨慎操作。奖品总数应为 12 个。</p>
         </div>
@@ -106,19 +170,19 @@
             const res = await fetch('/api/stats');
             const s = await res.json();
             document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-item"><div class="num">${s.total_people}</div><div class="label">总人数</div></div>
-                <div class="stat-item"><div class="num">${s.drawn_people}</div><div class="label">已抽奖</div></div>
-                <div class="stat-item"><div class="num">${s.total_prizes}</div><div class="label">总奖品</div></div>
-                <div class="stat-item"><div class="num">${s.remaining_prizes}</div><div class="label">剩余奖品</div></div>
-            `;
+                    <div class="stat-item"><div class="num">${s.total_people}</div><div class="label">总人数</div></div>
+                    <div class="stat-item"><div class="num">${s.drawn_people}</div><div class="label">已抽奖</div></div>
+                    <div class="stat-item"><div class="num">${s.total_prizes}</div><div class="label">总奖品</div></div>
+                    <div class="stat-item"><div class="num">${s.remaining_prizes}</div><div class="label">剩余奖品</div></div>
+                `;
         }
 
         async function loadWinners() {
             const res = await fetch('/api/winners');
             const winners = await res.json();
             document.getElementById('winnersTable').innerHTML = winners.map(w => `
-                <tr><td>${w.name}</td><td>${w.prize}</td><td>${w.time}</td></tr>
-            `).join('') || '<tr><td colspan="3" style="text-align:center;color:#999;">暂无中奖记录</td></tr>';
+                    <tr><td>${w.name}</td><td>${w.prize}</td><td>${w.time}</td></tr>
+                `).join('') || '<tr><td colspan="3" style="text-align:center;color:#999;">暂无中奖记录</td></tr>';
         }
 
         async function initData() {
@@ -131,8 +195,14 @@
             const participants = document.getElementById('participantsInput').value
                 .trim().split('\n').map(s => s.trim()).filter(Boolean);
 
+            const password = document.getElementById('adminPassword').value.trim();
+
             if (prizes.length === 0 || participants.length === 0) {
                 alert('请填写奖品和参与者名单');
+                return;
+            }
+            if (!password) {
+                alert('请输入管理密码');
                 return;
             }
 
@@ -142,9 +212,13 @@
             const res = await fetch('/api/init', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prizes, participants })
+                body: JSON.stringify({ prizes, participants, password })
             });
             const data = await res.json();
+            if (res.status === 403) {
+                alert(data.error);
+                return;
+            }
             alert(data.message);
             loadStats();
             loadWinners();

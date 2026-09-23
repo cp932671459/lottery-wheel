@@ -3,8 +3,12 @@ import sqlite3
 import random
 import os
 
-app = Flask(__name__)
-DB_PATH = 'data/lottery.db'
+# ========== 配置 ==========
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'data', 'lottery.db')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'sdladmin123')  # 默认密码 admin123
+
+app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 
 
 def get_db():
@@ -14,7 +18,7 @@ def get_db():
 
 
 def init_db():
-    os.makedirs('data', exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, 'data'), exist_ok=True)
     conn = get_db()
     c = conn.cursor()
 
@@ -42,6 +46,10 @@ def init_db():
     conn.close()
 
 
+# 模块加载时初始化数据库（gunicorn 启动也会执行）
+init_db()
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -54,8 +62,13 @@ def admin():
 
 @app.route('/api/init', methods=['POST'])
 def init_data():
-    """管理员导入奖品和参与者名单"""
+    """管理员导入奖品和参与者名单（需要密码）"""
     data = request.json
+    password = data.get('password', '')
+
+    if password != ADMIN_PASSWORD:
+        return jsonify({"error": "管理密码错误，无法导入数据"}), 403
+
     prizes = data.get('prizes', [])
     participants = data.get('participants', [])
 
@@ -79,7 +92,7 @@ def init_data():
 
 @app.route('/api/draw', methods=['POST'])
 def draw():
-    """用户抽奖接口"""
+    """用户抽奖接口（无需密码）"""
     data = request.json
     name = data.get('name', '').strip()
 
@@ -180,8 +193,6 @@ def get_stats():
         "total_prizes": total_prizes
     })
 
-
-init_db()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
